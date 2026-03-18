@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
-import { Waves, Bike, PersonStanding, Activity, Settings, History } from "lucide-react";
+import { Waves, Bike, PersonStanding, Activity, Settings, History, Gift, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   loadUserSettings,
@@ -12,6 +12,7 @@ import {
   getExpInCurrentLevel,
   XP_PER_LEVEL,
 } from "@/lib/settings";
+import { getUserId } from "@/lib/user-id";
 
 const MOBILITY_MODES = [
   { id: "walk", label: "歩く", icon: PersonStanding, desc: "無理のない歩行で避難" },
@@ -21,10 +22,25 @@ const MOBILITY_MODES = [
 
 export default function Home() {
   const [exp, setExp] = useState(0);
+  const [voucherTotal, setVoucherTotal] = useState<number | null>(null);
 
   useEffect(() => {
     const s = loadUserSettings();
     setExp(s.exp ?? 0);
+  }, []);
+
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) return;
+    fetch("/api/vouchers", { headers: { "X-User-Id": userId } })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const total = data.reduce((s: number, v: { remainingAmount?: number }) => s + (v.remainingAmount ?? 0), 0);
+          setVoucherTotal(total);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const level = getLevel(exp);
@@ -80,6 +96,32 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+
+        {/* 地域振興券フォルダ（QRコード決済で利用可能） */}
+        <section>
+          <Link href="/vouchers" className="block">
+            <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-card to-primary/5 transition-shadow hover:shadow-md">
+              <CardContent className="flex items-center gap-4 py-4">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                  <Gift className="size-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-foreground">地域振興券</p>
+                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <QrCode className="size-3.5" aria-hidden />
+                    QRコード決済で利用できます
+                  </p>
+                  {voucherTotal != null && voucherTotal > 0 && (
+                    <p className="mt-1 text-sm font-medium text-primary">
+                      利用可能 {voucherTotal.toLocaleString()} 円
+                    </p>
+                  )}
+                </div>
+                <span className="text-muted-foreground" aria-hidden>→</span>
+              </CardContent>
+            </Card>
+          </Link>
+        </section>
 
         <section>
           <Card className="overflow-hidden border-2 border-accent/40 bg-card shadow-md">

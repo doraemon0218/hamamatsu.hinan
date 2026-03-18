@@ -28,7 +28,8 @@ import {
   Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { addExp } from "@/lib/settings";
+import { addExp, loadUserSettings, getAgeFromBirthDate } from "@/lib/settings";
+import { getUserId } from "@/lib/user-id";
 import { getRegion, type SpotSource } from "@/lib/regions";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import type { EvacuationSpot } from "@/components/EvacuationMap";
@@ -556,20 +557,34 @@ function TrainingContent() {
     if (!log) return;
     if (submittedLogIds.has(log.id)) return;
     setSubmitStatus("sending");
-    const url =
+    const userId = getUserId();
+    const settings = loadUserSettings();
+    const age = getAgeFromBirthDate(settings.birthDate ?? "");
+    const payload = {
+      log,
+      userId,
+      displayName: settings.displayName?.trim() || "匿名",
+      age: age ?? undefined,
+      startLabel: regionConfig.startLabel,
+    };
+    const apiUrl = `/api/submit/${regionConfig.id}`;
+    const externalUrl =
       regionConfig.id === "kushimoto"
         ? (process.env.NEXT_PUBLIC_KUSHIMOTO_SUBMIT_URL ?? "")
         : (process.env.NEXT_PUBLIC_HAMAMATSU_SUBMIT_URL ?? "");
     try {
-      if (url) {
-        const res = await fetch(url, {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(res.statusText);
+      if (externalUrl) {
+        await fetch(externalUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(log),
         });
-        if (!res.ok) throw new Error(res.statusText);
-      } else {
-        await new Promise((r) => setTimeout(r, 800));
       }
       const next = new Set(submittedLogIds);
       next.add(log.id);
@@ -747,21 +762,39 @@ function TrainingContent() {
               {(() => {
                 const alreadySubmitted = submittedLogIds.has(log.id);
                 return (
-                  <div className="pt-2 border-t border-border space-y-3">
+                  <div className="space-y-3 rounded-xl border-2 border-primary/20 bg-primary/5 p-4 pt-3">
+                    <p className="text-center text-sm font-medium text-foreground">
+                      訓練記録を届けて、地域の防災に貢献しましょう
+                    </p>
                     <Button
-                      className="w-full"
-                      variant="outline"
+                      className={cn(
+                        "w-full py-5 text-lg font-bold shadow-md transition-all",
+                        "hover:shadow-lg hover:brightness-105 active:scale-[0.99]",
+                        !alreadySubmitted &&
+                          submitStatus !== "sending" &&
+                          submitStatus !== "ok" &&
+                          submitStatus !== "error" &&
+                          "bg-primary text-primary-foreground hover:bg-primary/90"
+                      )}
+                      variant={
+                        alreadySubmitted || submitStatus === "ok" || submitStatus === "error"
+                          ? "outline"
+                          : "default"
+                      }
+                      size="lg"
                       onClick={submitToRegion}
                       disabled={submitStatus === "sending" || alreadySubmitted}
                     >
-                      <Send className="mr-2 size-4" />
-                      {submitStatus === "sending"
-                        ? "送信中…"
-                        : alreadySubmitted || submitStatus === "ok"
-                          ? "送信しました"
-                          : submitStatus === "error"
-                            ? "送信に失敗しました"
-                            : `この訓練記録を${regionConfig.submitLabel}に提出する`}
+                      <Send className="mr-2 size-5 shrink-0" aria-hidden />
+                      <span className="break-keep">
+                        {submitStatus === "sending"
+                          ? "送信中…"
+                          : alreadySubmitted || submitStatus === "ok"
+                            ? "送信しました"
+                            : submitStatus === "error"
+                              ? "送信に失敗しました"
+                              : `この訓練記録を${regionConfig.submitLabel}に提出する`}
+                      </span>
                     </Button>
                     {(alreadySubmitted || submitStatus === "ok") && (
                       <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">

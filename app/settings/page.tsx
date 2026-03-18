@@ -22,6 +22,7 @@ import {
 } from "@/lib/settings";
 
 export default function SettingsPage() {
+  const [displayName, setDisplayName] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -37,6 +38,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const s = loadUserSettings();
+    setDisplayName(s.displayName ?? "");
     setHeight(s.height);
     setWeight(s.weight);
     setBirthDate(s.birthDate);
@@ -53,6 +55,7 @@ export default function SettingsPage() {
   const handleSave = () => {
     const current = loadUserSettings();
     saveUserSettings({
+      displayName: displayName.trim(),
       height,
       weight,
       birthDate,
@@ -124,10 +127,19 @@ export default function SettingsPage() {
               あなたの情報
             </CardTitle>
             <CardDescription>
-              身長・体重・生年月日・性別・運動障害の有無。変更後は「設定を保存」を押してください。
+              表示名は訓練記録の提出先（行政）で表示されます。身長・体重・生年月日・性別・運動障害の有無。変更後は「設定を保存」を押してください。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="display-name">表示名（任意）</Label>
+              <Input
+                id="display-name"
+                placeholder="例: 山田 太郎"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="height">身長 (cm)</Label>

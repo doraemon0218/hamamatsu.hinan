@@ -3,6 +3,8 @@ export const XP_PER_LEVEL = 100;
 
 /** 端末に保持するユーザー設定（あなたの情報・スタート地点・ゲーミフィケーション） */
 export type UserSettings = {
+  /** 表示名（行政ダッシュボード・振興券配布で利用） */
+  displayName: string;
   height: string;
   weight: string;
   birthDate: string;
@@ -20,6 +22,7 @@ export type UserSettings = {
 const STORAGE_KEY = "disaster-app-user-settings";
 
 const defaults: UserSettings = {
+  displayName: "",
   height: "",
   weight: "",
   birthDate: "",
@@ -32,6 +35,18 @@ const defaults: UserSettings = {
   workAddress: "",
   familyAddress: "",
 };
+
+/** 生年月日から年齢を算出（今日時点）。空の場合は null */
+export function getAgeFromBirthDate(birthDate: string): number | null {
+  if (!birthDate) return null;
+  const d = new Date(birthDate);
+  if (Number.isNaN(d.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  const m = today.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+  return age >= 0 ? age : null;
+}
 
 /** 経験値から避難レベルを算出（Lv1〜） */
 export function getLevel(exp: number): number {
@@ -58,6 +73,7 @@ export function loadUserSettings(): UserSettings {
     const parsed = JSON.parse(raw) as Partial<UserSettings>;
     const merged = { ...defaults, ...parsed };
     if (typeof merged.exp !== "number") merged.exp = 0;
+    if (typeof merged.displayName !== "string") merged.displayName = "";
     return merged;
   } catch {
     return { ...defaults };
