@@ -32,7 +32,7 @@ import { addExp } from "@/lib/settings";
 import { getRegion, type SpotSource } from "@/lib/regions";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import type { EvacuationSpot } from "@/components/EvacuationMap";
-import { fetchWalkingRouteVia, type LatLng } from "@/components/RouteMap";
+import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
 
 type DrillPhase = "idle" | "running" | "paused" | "ended";
 

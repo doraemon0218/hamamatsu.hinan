@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import { REGIONS, REGION_IDS_FOR_HISTORY } from "@/lib/regions";
 import type { RegionId } from "@/lib/regions";
-import { fetchWalkingRouteVia, type LatLng } from "@/components/RouteMap";
+import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
 
 const DRILL_LOGS_KEY_PREFIX = "disaster-app-drill-logs-";
 const DRILL_LOGS_KEY_LEGACY = "disaster-app-drill-logs";
