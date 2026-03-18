@@ -162,3 +162,28 @@
   font-size: 2rem;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
+
+/* ゲーミフィケーション：未訓練地点のキラキラ・選択時の視線誘導 */
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+@keyframes sparkle-border {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent); }
+  50% { box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(234, 88, 12, 0.4); }
+}
+.sparkle-border {
+  animation: sparkle-border 2s ease-in-out infinite;
+}
+.sparkle-dot {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: sparkle 1s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}

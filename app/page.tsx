@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Waves, User, Bike, PersonStanding, Activity } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { Waves, Bike, PersonStanding, Activity, Settings, History } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  loadUserSettings,
+  getLevel,
+  getExpInCurrentLevel,
+  XP_PER_LEVEL,
+} from "@/lib/settings";
 
-// 避難訓練の3つの移動手段（1つに絞らない）
 const MOBILITY_MODES = [
   { id: "walk", label: "歩く", icon: PersonStanding, desc: "無理のない歩行で避難" },
   { id: "run", label: "走る", icon: Activity, desc: "駆け足で素早く避難" },
@@ -17,28 +20,67 @@ const MOBILITY_MODES = [
 ] as const;
 
 export default function Home() {
-  const [height, setHeight] = useState<string>("");
-  const [weight, setWeight] = useState<string>("");
-  const [birthDate, setBirthDate] = useState<string>("");
-  const [gender, setGender] = useState<string>("");
-  const [hasMobilityDisability, setHasMobilityDisability] = useState(false);
-  const [homeAddress, setHomeAddress] = useState<string>("");
-  const [workAddress, setWorkAddress] = useState<string>("");
-  const [familyAddress, setFamilyAddress] = useState<string>("");
+  const [exp, setExp] = useState(0);
+
+  useEffect(() => {
+    const s = loadUserSettings();
+    setExp(s.exp ?? 0);
+  }, []);
+
+  const level = getLevel(exp);
+  const expInLevel = getExpInCurrentLevel(exp);
+  const xpToNext = XP_PER_LEVEL - expInLevel;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/90 backdrop-blur">
-        <div className="container mx-auto flex items-center gap-2 px-4 py-3">
-          <Waves className="size-6 text-primary" aria-hidden />
-          <h1 className="text-lg font-semibold text-foreground">
-            いっとき避難トレーニング
-          </h1>
+        <div className="container mx-auto flex items-center justify-between gap-2 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Waves className="size-6 text-primary" aria-hidden />
+            <h1 className="text-lg font-semibold text-foreground">
+              いっとき避難トレーニング
+            </h1>
+          </div>
+          <Link
+            href="/settings"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="設定"
+          >
+            <Settings className="size-5" />
+          </Link>
         </div>
       </header>
 
       <main className="container mx-auto max-w-2xl space-y-6 px-4 py-6 pb-24">
-        {/* ヒーロー（短く） */}
+        {/* 現在のレベル・次のレベルまでの必要経験値 */}
+        <Card className="border-accent/30 bg-gradient-to-br from-card to-accent/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">避難レベル</p>
+                <p className="text-2xl font-bold text-foreground">Lv.{level}</p>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>次のレベルまで</span>
+                  <span className="font-medium tabular-nums">{xpToNext} XP</span>
+                </div>
+                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-accent transition-all"
+                    style={{
+                      width: `${(expInLevel / XP_PER_LEVEL) * 100}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {expInLevel} / {XP_PER_LEVEL} XP（現在のレベル内）
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <section>
           <Card className="overflow-hidden border-2 border-accent/40 bg-card shadow-md">
             <CardHeader className="pb-2">
@@ -50,182 +92,12 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                歩く・走る・自転車のそれぞれの状態で避難訓練ができます。
+                歩く・走る・自転車のそれぞれの状態で避難訓練ができます。あなたの情報やスタート地点の登録は設定から行えます。
               </p>
             </CardContent>
           </Card>
         </section>
 
-        {/* 個人情報 ＋ 運動障害チェック */}
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="size-5" aria-hidden />
-                あなたの情報
-              </CardTitle>
-              <CardDescription>
-                身長・体重・生年月日・性別を入力し、運動障害の有無を選択してください
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="height">身長 (cm)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    min={100}
-                    max={250}
-                    placeholder="170"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight">体重 (kg)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    min={30}
-                    max={200}
-                    placeholder="65"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="birthdate">生年月日</Label>
-                <Input
-                  id="birthdate"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  max={new Date().toISOString().slice(0, 10)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>性別</Label>
-                <div className="flex gap-4">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="male"
-                      checked={gender === "male"}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="size-4 border-input accent-primary"
-                    />
-                    <span className="text-sm">男性</span>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="female"
-                      checked={gender === "female"}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="size-4 border-input accent-primary"
-                    />
-                    <span className="text-sm">女性</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* 運動障害があるか */}
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={hasMobilityDisability}
-                    onChange={(e) => setHasMobilityDisability(e.target.checked)}
-                    className="mt-1 size-4 shrink-0 rounded border-input accent-primary"
-                    aria-describedby="mobility-disability-desc"
-                  />
-                  <div>
-                    <span className="font-medium text-foreground">
-                      運動障害がある
-                    </span>
-                    <p id="mobility-disability-desc" className="mt-1 text-sm text-muted-foreground">
-                      身体の不自由さや持病などで、歩行・走行・自転車のいずれかに制限がある場合にチェックしてください
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 一時避難訓練のスタート地点（3か所） */}
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle>一時避難訓練のスタート地点</CardTitle>
-              <CardDescription>
-                今後の避難訓練で使う「スタート地点」として、自宅・職場・最愛の家族の居場所を登録します
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="home-address">自宅の住所</Label>
-                <Input
-                  id="home-address"
-                  placeholder="例: 〇〇県〇〇市〇〇町..."
-                  value={homeAddress}
-                  onChange={(e) => setHomeAddress(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="mt-1"
-                >
-                  現在地を登録する
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="work-address">職場の住所</Label>
-                <Input
-                  id="work-address"
-                  placeholder="例: 勤務先の所在地..."
-                  value={workAddress}
-                  onChange={(e) => setWorkAddress(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="mt-1"
-                >
-                  現在地を登録する
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="family-address">最愛の家族の居場所</Label>
-                <Input
-                  id="family-address"
-                  placeholder="例: 実家・パートナーの職場・よくいる場所など"
-                  value={familyAddress}
-                  onChange={(e) => setFamilyAddress(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="mt-1"
-                >
-                  現在地を登録する
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                入力した情報は、この端末内でのみ利用し、今後の避難訓練シナリオのスタート地点として使う想定です。
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 避難訓練：歩く・走る・自転車の3つ → 訓練ページへ */}
         <section>
           <Card>
             <CardHeader>
@@ -259,15 +131,36 @@ export default function Home() {
                   );
                 })}
               </ul>
-              <div className="flex justify-center pt-2">
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
                 <Link
-                  href="/training"
+                  href="/training?region=hamamatsu"
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "bg-accent text-accent-foreground hover:bg-accent/90"
                   )}
                 >
-                  訓練を行う
+                  訓練を行う（浜松ver.）
+                </Link>
+                <Link
+                  href="/training?region=kushimoto"
+                  className={cn(
+                    buttonVariants({ size: "lg", variant: "outline" }),
+                    "border-accent text-accent-foreground hover:bg-accent/10"
+                  )}
+                >
+                  訓練を行う（串本町ver.）
+                </Link>
+              </div>
+              <div className="flex justify-center pt-3">
+                <Link
+                  href="/history"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <History className="mr-2 size-4" />
+                  過去の訓練記録を見る
                 </Link>
               </div>
             </CardContent>
