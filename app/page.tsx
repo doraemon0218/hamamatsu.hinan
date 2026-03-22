@@ -101,7 +101,7 @@ export default function Home() {
         <div className="container mx-auto flex items-center justify-between gap-2 px-4 py-3">
           <div className="flex items-center gap-2">
             <Waves className="size-6 text-primary" aria-hidden />
-            <h1 className="text-lg font-semibold text-foreground">ココイケ</h1>
+            <h1 className="text-lg font-semibold text-foreground">ココイコ</h1>
           </div>
           <Link
             href="/settings"

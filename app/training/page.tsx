@@ -26,6 +26,8 @@ import {
   RotateCcw,
   Home,
   Send,
+  ShieldCheck,
+  MapPinned,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addExp, loadUserSettings, getAgeFromBirthDate } from "@/lib/settings";
@@ -37,6 +39,7 @@ import {
   type RegionId,
   type SpotSource,
 } from "@/lib/regions";
+import { getEvacuationOfficialMeta } from "@/lib/evacuation-official-sources";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import type { EvacuationSpot } from "@/components/EvacuationMap";
 import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
@@ -345,6 +348,23 @@ const MOBILITY_OPTIONS = [
   { id: "bicycle", label: "自転車に乗る", icon: Bike },
 ] as const;
 
+function DesignatedEvacSiteBadge({ designated }: { designated: boolean }) {
+  if (designated) {
+    return (
+      <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-300/80 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-100">
+        <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
+        指定避難場所（公開データに掲載）
+      </span>
+    );
+  }
+  return (
+    <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+      <MapPinned className="size-3.5 shrink-0 opacity-80" aria-hidden />
+      参考（公開一覧に当該施設名なし）
+    </span>
+  );
+}
+
 /** 標高+建物高さの大きい順で、避難可能な範囲（時間内）のトップ5を返す */
 function getEvacuationSpots(
   spots: SpotSource[],
@@ -369,6 +389,7 @@ function getEvacuationSpots(
       distance: s.distance,
       rank: i + 1,
       elevationPlusHeightM: s.elevationPlusHeightM,
+      isDesignatedEvacuationSite: s.isDesignatedEvacuationSite,
     }));
 }
 
@@ -435,6 +456,11 @@ function TrainingContent() {
   const topFive = useMemo(
     () => getEvacuationSpots(regionConfig.spots, timeLimit, mobility),
     [regionConfig.spots, timeLimit, mobility]
+  );
+
+  const evacuationOfficialMeta = useMemo(
+    () => getEvacuationOfficialMeta(regionConfig.id),
+    [regionConfig.id]
   );
 
   /** 過去ログに同じ目的地があるか（名前または座標で判定） */
@@ -939,9 +965,29 @@ function TrainingContent() {
               <MapPin className="size-5" aria-hidden />
               避難可能な推奨地点（トップ5）
             </CardTitle>
-            <CardDescription>
-              スタート地点は{regionConfig.startLabel}。{timeLimit}分以内に{MOBILITY_OPTIONS.find((m) => m.id === mobility)?.label}
-              で到達できる範囲のうち、<strong>標高＋建物の高さ</strong>が大きい順にトップ5を表示しています。地図で位置関係を確認できます。
+            <CardDescription className="space-y-2">
+              <span className="block">
+                スタート地点は{regionConfig.startLabel}。{timeLimit}分以内に{MOBILITY_OPTIONS.find((m) => m.id === mobility)?.label}
+                で到達できる範囲のうち、<strong>標高＋建物の高さ</strong>が大きい順にトップ5を表示しています。地図で位置関係を確認できます。
+              </span>
+              <span className="block text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">指定の有無</strong>：{evacuationOfficialMeta.summary}
+                {evacuationOfficialMeta.matchingNote ? ` ${evacuationOfficialMeta.matchingNote}` : ""}{" "}
+                災害の種類ごとに指定が異なる場合があります。実際の避難はハザードマップ等で必ず確認してください。
+              </span>
+              <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {evacuationOfficialMeta.sources.map((s) => (
+                  <a
+                    key={s.href}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline-offset-2 hover:underline"
+                  >
+                    {s.label}
+                  </a>
+                ))}
+              </span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -955,7 +1001,7 @@ function TrainingContent() {
                   className="w-full"
                 />
                 <p className="px-3 py-2 text-xs text-muted-foreground bg-muted/30 border-t border-border">
-                  青＝{regionConfig.startLabel}（スタート）　オレンジの数字＝推奨地点（標高+建物高さの高い順・タップで強調）
+                  青＝{regionConfig.startLabel}（スタート）　<strong className="text-emerald-800 dark:text-emerald-200">緑の数字</strong>＝公開データに掲載の指定避難場所　<strong className="text-stone-600 dark:text-stone-400">グレーの数字</strong>＝参考（一覧に当該施設名なし）　タップで強調
                 </p>
               </div>
             )}
@@ -966,6 +1012,19 @@ function TrainingContent() {
               </p>
             ) : (
               <ol className="space-y-2">
+                <li className="mb-3 rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">凡例：</span>
+                  <span className="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="inline-flex items-center gap-1">
+                      <ShieldCheck className="size-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden />
+                      公開データに掲載の指定避難場所
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPinned className="size-3.5 opacity-70" aria-hidden />
+                      参考（公開一覧に当該施設名なし）
+                    </span>
+                  </span>
+                </li>
                 {topFiveWithTrained.map((spot, index) => {
                   const trained = spot.trained;
                   const selected = selectedSpotIndex === index;
@@ -1001,7 +1060,8 @@ function TrainingContent() {
                         </span>
                         <div className="min-w-0 flex-1 pr-12">
                           <p className="font-medium text-foreground">{spot.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <DesignatedEvacSiteBadge designated={spot.isDesignatedEvacuationSite} />
+                          <p className="mt-1 text-xs text-muted-foreground">
                             目安 {spot.estimatedMinutes}分 ・ {spot.distance}
                             {spot.elevationPlusHeightM != null && (
                               <> ・ 標高+建物高さ 約{spot.elevationPlusHeightM}m</>

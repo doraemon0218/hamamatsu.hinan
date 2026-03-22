@@ -13,6 +13,8 @@ export type EvacuationSpot = {
   rank: number;
   /** 標高+建物高さ（m）。津波避難の目安として表示用 */
   elevationPlusHeightM?: number;
+  /** 行政公開データ照合結果（詳細は docs/EVACUATION-OFFICIAL-DATA.md） */
+  isDesignatedEvacuationSite: boolean;
 };
 
 type EvacuationMapProps = {
@@ -90,20 +92,31 @@ export function EvacuationMap({
 
     spots.forEach((spot, index) => {
       const isSelected = selectedIndex === index;
+      const designatedClass = spot.isDesignatedEvacuationSite
+        ? "evacuation-marker-inner--designated"
+        : "evacuation-marker-inner--reference";
+      const designatedLabel = spot.isDesignatedEvacuationSite
+        ? "🏛️ 指定避難場所（公開データに掲載）"
+        : "📌 参考（公開一覧に当該施設名なし）";
       const marker = L.marker([spot.lat, spot.lng], {
         icon: L.divIcon({
           className: "evacuation-marker",
-          html: `<span class="evacuation-marker-inner ${isSelected ? "evacuation-marker-selected" : ""}">${spot.rank}</span>`,
+          html: `<span class="evacuation-marker-inner ${designatedClass} ${isSelected ? "evacuation-marker-selected" : ""}">${spot.rank}</span>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
       }).addTo(mapRef.current!);
 
-      marker.bindTooltip(`<strong>${spot.name}</strong><br/>目安 ${spot.estimatedMinutes}分 ・ ${spot.distance}`, {
-        permanent: false,
-        direction: "top",
-      });
-      marker.bindPopup(`${spot.name}<br/>目安 ${spot.estimatedMinutes}分 ・ ${spot.distance}`);
+      marker.bindTooltip(
+        `<strong>${spot.name}</strong><br/>${designatedLabel}<br/>目安 ${spot.estimatedMinutes}分 ・ ${spot.distance}`,
+        {
+          permanent: false,
+          direction: "top",
+        }
+      );
+      marker.bindPopup(
+        `${spot.name}<br/>${designatedLabel}<br/>目安 ${spot.estimatedMinutes}分 ・ ${spot.distance}`
+      );
 
       markersRef.current.push(marker);
     });

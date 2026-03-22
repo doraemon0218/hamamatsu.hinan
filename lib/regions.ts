@@ -13,6 +13,11 @@ export type SpotSource = {
   buildingHeightM: number;
   estimatedMinutes: number;
   distance: string;
+  /**
+   * 行政の公開データ（オープンデータ・公式ページ）と施設名等を照合した結果。
+   * 根拠・URL は `docs/EVACUATION-OFFICIAL-DATA.md` および `getEvacuationOfficialMeta` を参照。
+   */
+  isDesignatedEvacuationSite: boolean;
 };
 
 export type RegionConfig = {
@@ -35,6 +40,8 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 213,
     estimatedMinutes: 4,
     distance: "約350m",
+    // 静岡県 221309 指定緊急避難場所 CSV の名称に該当なし。市「津波避難ビル一覧」HTML でも当該名称未確認。
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "浜松城公園（高台）",
@@ -44,6 +51,7 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 0,
     estimatedMinutes: 12,
     distance: "約1.0km",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "浜松駅前ビル",
@@ -53,6 +61,7 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 32,
     estimatedMinutes: 2,
     distance: "約100m",
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "浜松市役所",
@@ -62,15 +71,17 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 24,
     estimatedMinutes: 10,
     distance: "約0.9km",
+    isDesignatedEvacuationSite: true,
   },
   {
-    name: "東小学校（津波避難ビル指定想定）",
+    name: "東小学校",
     lat: 34.711874,
     lng: 137.738015,
     elevationM: 10,
     buildingHeightM: 12,
     estimatedMinutes: 11,
     distance: "約0.9km",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "浜松中部学園（小・中学校）",
@@ -80,6 +91,7 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 15,
     estimatedMinutes: 13,
     distance: "約1.1km",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "双葉小学校",
@@ -89,6 +101,7 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 12,
     estimatedMinutes: 5,
     distance: "約400m",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "西小学校",
@@ -98,6 +111,7 @@ const SPOTS_HAMAMATSU: SpotSource[] = [
     buildingHeightM: 12,
     estimatedMinutes: 9,
     distance: "約0.8km",
+    isDesignatedEvacuationSite: true,
   },
 ];
 
@@ -113,6 +127,7 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 27,
     estimatedMinutes: 6,
     distance: "約500m",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "東牟婁振興局串本建設部（高台・海抜約53m）",
@@ -122,6 +137,8 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 0,
     estimatedMinutes: 3,
     distance: "約250m",
+    // BODiK 串本町避難先 CSV に当該施設名の行なし
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "串本町立串本中学校",
@@ -131,6 +148,7 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 12,
     estimatedMinutes: 2,
     distance: "約200m",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "串本古座高等学校",
@@ -140,6 +158,7 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 15,
     estimatedMinutes: 7,
     distance: "約600m",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "サンゴ台集会所",
@@ -149,6 +168,7 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 0,
     estimatedMinutes: 2,
     distance: "約150m",
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "串本橋北詰付近（高台）",
@@ -158,6 +178,7 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
     buildingHeightM: 0,
     estimatedMinutes: 8,
     distance: "約700m",
+    isDesignatedEvacuationSite: false,
   },
 ];
 
@@ -171,6 +192,8 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 120,
     estimatedMinutes: 5,
     distance: "約450m",
+    // 大阪市北区「民間施設」津波避難ビル一覧の表に「大阪駅」等の記載なし
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "グランフロント大阪（北館）",
@@ -180,6 +203,8 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 170,
     estimatedMinutes: 7,
     distance: "約650m",
+    // 北区一覧 No.5「グランフロント大阪 南館、北館」に該当
+    isDesignatedEvacuationSite: true,
   },
   {
     name: "梅田スカイビル（高層・展望施設）",
@@ -189,6 +214,7 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 173,
     estimatedMinutes: 12,
     distance: "約1.1km",
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "阪急百貨店うめだ本店（周辺ビル）",
@@ -198,6 +224,7 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 45,
     estimatedMinutes: 2,
     distance: "約150m",
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "梅田ツインタワーズ・南タワー",
@@ -207,6 +234,7 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 192,
     estimatedMinutes: 8,
     distance: "約750m",
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "ヒルトン大阪（北新地側・高層）",
@@ -216,6 +244,7 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 140,
     estimatedMinutes: 9,
     distance: "約850m",
+    isDesignatedEvacuationSite: false,
   },
   {
     name: "大阪梅田駅（地下鉄・阪神）周辺ビル",
@@ -225,6 +254,7 @@ const SPOTS_UMEDA: SpotSource[] = [
     buildingHeightM: 38,
     estimatedMinutes: 4,
     distance: "約350m",
+    isDesignatedEvacuationSite: false,
   },
 ];
 

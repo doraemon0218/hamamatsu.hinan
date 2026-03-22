@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# 照合作業用にダウンロードした CSV（コミットしない）
+tmp_*.csv
 
 # debug
 npm-debug.log*
