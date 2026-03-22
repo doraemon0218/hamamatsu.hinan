@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Waves, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
-import { REGIONS, REGION_IDS_FOR_HISTORY } from "@/lib/regions";
+import { REGIONS, REGION_IDS_FOR_HISTORY, inferRegionIdFromStart } from "@/lib/regions";
 import type { RegionId } from "@/lib/regions";
 import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
 
@@ -18,15 +18,9 @@ function getDrillLogsKey(regionId: string): string {
   return `${DRILL_LOGS_KEY_PREFIX}${regionId}`;
 }
 
-/** スタート座標から地域を推定。串本町は北緯33°台、浜松は34°台 */
-function inferRegionIdFromStart(start: { lat: number; lng: number }): RegionId {
-  if (start.lat < 34) return "kushimoto";
-  return "hamamatsu";
-}
-
 function resolveRegionId(item: Record<string, unknown>): RegionId {
   const r = item.regionId as string | undefined;
-  if (r === "kushimoto" || r === "hamamatsu") return r;
+  if (r === "kushimoto" || r === "hamamatsu" || r === "umeda") return r;
   const start = item.start as { lat: number; lng: number } | undefined;
   if (start && typeof start.lat === "number") return inferRegionIdFromStart(start);
   return "hamamatsu";
@@ -64,7 +58,7 @@ function migrateAndLoadByRegion(regionId: RegionId): unknown[] {
 function repairHistoryByRegion() {
   if (typeof window === "undefined") return;
   try {
-    const regionIds: RegionId[] = ["hamamatsu", "kushimoto"];
+    const regionIds = REGION_IDS_FOR_HISTORY;
     const all: unknown[] = [];
     for (const rid of regionIds) {
       const raw = localStorage.getItem(getDrillLogsKey(rid));
@@ -73,7 +67,10 @@ function repairHistoryByRegion() {
         if (Array.isArray(arr)) all.push(...arr);
       }
     }
-    const byRegion: Record<string, unknown[]> = { hamamatsu: [], kushimoto: [] };
+    const byRegion = Object.fromEntries(regionIds.map((id) => [id, [] as unknown[]])) as Record<
+      RegionId,
+      unknown[]
+    >;
     for (const item of all) {
       const o = item as Record<string, unknown>;
       const rid = resolveRegionId(o);
@@ -159,11 +156,18 @@ function formatDate(iso: string) {
   }
 }
 
+function emptyLogsByRegion(): Record<RegionId, HistoryLog[]> {
+  return REGION_IDS_FOR_HISTORY.reduce(
+    (acc, id) => {
+      acc[id] = [];
+      return acc;
+    },
+    {} as Record<RegionId, HistoryLog[]>
+  );
+}
+
 export default function HistoryPage() {
-  const [logsByRegion, setLogsByRegion] = useState<Record<RegionId, HistoryLog[]>>({
-    hamamatsu: [],
-    kushimoto: [],
-  });
+  const [logsByRegion, setLogsByRegion] = useState<Record<RegionId, HistoryLog[]>>(emptyLogsByRegion);
   /** GPSが無いログ用：道路に沿った経路（緑線）を取得してキャッシュ */
   const [roadTracks, setRoadTracks] = useState<Record<string, LatLng[]>>({});
   const requestedTrackIds = useRef<Set<string>>(new Set());
@@ -172,10 +176,15 @@ export default function HistoryPage() {
 
   useEffect(() => {
     repairHistoryByRegion();
-    setLogsByRegion({
-      hamamatsu: loadHistoryLogsByRegion("hamamatsu"),
-      kushimoto: loadHistoryLogsByRegion("kushimoto"),
-    });
+    setLogsByRegion(
+      REGION_IDS_FOR_HISTORY.reduce(
+        (acc, id) => {
+          acc[id] = loadHistoryLogsByRegion(id);
+          return acc;
+        },
+        {} as Record<RegionId, HistoryLog[]>
+      )
+    );
     setLikedLogIds(loadLikedLogIds());
   }, []);
 
@@ -188,7 +197,7 @@ export default function HistoryPage() {
   };
 
   useEffect(() => {
-    const allLogs = [...logsByRegion.hamamatsu, ...logsByRegion.kushimoto];
+    const allLogs = REGION_IDS_FOR_HISTORY.flatMap((id) => logsByRegion[id]);
     for (const log of allLogs) {
       if (log.gpsTrack.length >= 2) continue;
       if (requestedTrackIds.current.has(log.id)) continue;
@@ -199,9 +208,9 @@ export default function HistoryPage() {
         }
       });
     }
-  }, [logsByRegion.hamamatsu, logsByRegion.kushimoto]);
+  }, [logsByRegion]);
 
-  const hasAny = logsByRegion.hamamatsu.length > 0 || logsByRegion.kushimoto.length > 0;
+  const hasAny = REGION_IDS_FOR_HISTORY.some((id) => logsByRegion[id].length > 0);
 
   return (
     <div className="min-h-screen bg-background">

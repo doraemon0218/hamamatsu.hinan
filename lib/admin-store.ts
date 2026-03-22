@@ -3,7 +3,9 @@
  * 本番では DB に置き換える想定。
  */
 
-export type RegionId = "hamamatsu" | "kushimoto";
+import type { RegionId } from "@/lib/regions";
+
+export type { RegionId };
 
 export type SubmittedLog = {
   id: string;
@@ -47,6 +49,7 @@ export type UserVoucher = {
 const submissionsByRegion: Record<RegionId, SubmittedLog[]> = {
   hamamatsu: [],
   kushimoto: [],
+  umeda: [],
 };
 
 const userVouchers: UserVoucher[] = [];

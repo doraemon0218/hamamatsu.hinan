@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addSubmission, getSubmissions } from "@/lib/admin-store";
 import type { RegionId } from "@/lib/admin-store";
+import { REGION_IDS_FOR_HISTORY } from "@/lib/regions";
 
-const REGIONS: RegionId[] = ["hamamatsu", "kushimoto"];
+const REGIONS: RegionId[] = [...REGION_IDS_FOR_HISTORY];
 
 function parseBody(
   log: unknown,

@@ -251,12 +251,12 @@ export default function Home() {
                   );
                 })}
               </ul>
-              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
+              <div className="grid gap-3 pt-2 sm:grid-cols-3">
                 <Link
                   href="/training?region=hamamatsu"
                   className={cn(
                     buttonVariants({ size: "lg" }),
-                    "bg-accent text-accent-foreground hover:bg-accent/90"
+                    "w-full bg-accent text-accent-foreground hover:bg-accent/90"
                   )}
                 >
                   訓練を行う（浜松ver.）
@@ -265,10 +265,19 @@ export default function Home() {
                   href="/training?region=kushimoto"
                   className={cn(
                     buttonVariants({ size: "lg", variant: "outline" }),
-                    "border-accent text-accent-foreground hover:bg-accent/10"
+                    "w-full border-accent text-accent-foreground hover:bg-accent/10"
                   )}
                 >
                   訓練を行う（串本町ver.）
+                </Link>
+                <Link
+                  href="/training?region=umeda"
+                  className={cn(
+                    buttonVariants({ size: "lg", variant: "outline" }),
+                    "w-full border-primary/40 text-foreground hover:bg-primary/10"
+                  )}
+                >
+                  訓練を行う（大阪梅田ver.）
                 </Link>
               </div>
               <div className="flex justify-center pt-3">

@@ -19,6 +19,7 @@ type Voucher = {
 const REGION_LABELS: Record<string, string> = {
   hamamatsu: "浜松市",
   kushimoto: "串本町",
+  umeda: "大阪梅田",
 };
 
 export default function VouchersPage() {

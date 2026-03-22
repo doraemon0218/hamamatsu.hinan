@@ -1,9 +1,9 @@
 /**
  * 避難訓練の地域別設定（スタート地点・推奨避難スポット）
- * 他地域展開用。浜松・串本町を定義。
+ * 他地域展開用。浜松・串本町・大阪梅田を定義。
  */
 
-export type RegionId = "hamamatsu" | "kushimoto";
+export type RegionId = "hamamatsu" | "kushimoto" | "umeda";
 
 export type SpotSource = {
   name: string;
@@ -161,6 +161,73 @@ const SPOTS_KUSHIMOTO: SpotSource[] = [
   },
 ];
 
+/** 大阪梅田・HEP Five（1F）周辺（大阪市北区角田町） */
+const SPOTS_UMEDA: SpotSource[] = [
+  {
+    name: "大阪駅（JRタワー・駅ビル群）",
+    lat: 34.7024,
+    lng: 135.4956,
+    elevationM: 5,
+    buildingHeightM: 120,
+    estimatedMinutes: 5,
+    distance: "約450m",
+  },
+  {
+    name: "グランフロント大阪（北館）",
+    lat: 34.7041,
+    lng: 135.4938,
+    elevationM: 6,
+    buildingHeightM: 170,
+    estimatedMinutes: 7,
+    distance: "約650m",
+  },
+  {
+    name: "梅田スカイビル（高層・展望施設）",
+    lat: 34.7054,
+    lng: 135.4903,
+    elevationM: 8,
+    buildingHeightM: 173,
+    estimatedMinutes: 12,
+    distance: "約1.1km",
+  },
+  {
+    name: "阪急百貨店うめだ本店（周辺ビル）",
+    lat: 34.7026,
+    lng: 135.4988,
+    elevationM: 5,
+    buildingHeightM: 45,
+    estimatedMinutes: 2,
+    distance: "約150m",
+  },
+  {
+    name: "梅田ツインタワーズ・南タワー",
+    lat: 34.7056,
+    lng: 135.497,
+    elevationM: 6,
+    buildingHeightM: 192,
+    estimatedMinutes: 8,
+    distance: "約750m",
+  },
+  {
+    name: "ヒルトン大阪（北新地側・高層）",
+    lat: 34.6988,
+    lng: 135.4968,
+    elevationM: 4,
+    buildingHeightM: 140,
+    estimatedMinutes: 9,
+    distance: "約850m",
+  },
+  {
+    name: "大阪梅田駅（地下鉄・阪神）周辺ビル",
+    lat: 34.7006,
+    lng: 135.4975,
+    elevationM: 5,
+    buildingHeightM: 38,
+    estimatedMinutes: 4,
+    distance: "約350m",
+  },
+];
+
 export const REGIONS: Record<RegionId, RegionConfig> = {
   hamamatsu: {
     id: "hamamatsu",
@@ -178,12 +245,28 @@ export const REGIONS: Record<RegionId, RegionConfig> = {
     spots: SPOTS_KUSHIMOTO,
     submitLabel: "串本町",
   },
+  umeda: {
+    id: "umeda",
+    label: "大阪梅田ver.",
+    startLabel: "HEP Five（1F）",
+    start: { lat: 34.7022, lng: 135.4992 },
+    spots: SPOTS_UMEDA,
+    submitLabel: "大阪梅田",
+  },
 };
 
 export function getRegion(regionId: string | null): RegionConfig {
-  const id = regionId === "kushimoto" ? "kushimoto" : "hamamatsu";
-  return REGIONS[id];
+  if (regionId === "kushimoto") return REGIONS.kushimoto;
+  if (regionId === "umeda") return REGIONS.umeda;
+  return REGIONS.hamamatsu;
 }
 
-/** 自治体ごとの履歴表示順 */
-export const REGION_IDS_FOR_HISTORY: RegionId[] = ["hamamatsu", "kushimoto"];
+/** 自治体・エリアごとの履歴表示順 */
+export const REGION_IDS_FOR_HISTORY: RegionId[] = ["hamamatsu", "kushimoto", "umeda"];
+
+/** 古いログ等：スタート座標から地域を推定（梅田は緯度経度の矩形で判定） */
+export function inferRegionIdFromStart(start: { lat: number; lng: number }): RegionId {
+  if (start.lat < 34) return "kushimoto";
+  if (start.lat >= 34.64 && start.lat <= 34.76 && start.lng >= 135.44 && start.lng <= 135.56) return "umeda";
+  return "hamamatsu";
+}

@@ -53,10 +53,11 @@ CHOKIDAR_USEPOLLING=true WATCHPACK_POLLING=true npx next dev -p 3004 -H 127.0.0.
 |----|------|-----|
 | 1 | ホーム「ココイケ」（レベル・獲得した地域振興券を使うカード） | `/` |
 | 2 | 設定（表示名・生年月日＝行政向け提出情報） | `/settings` |
-| 3 | 避難訓練（浜松 or 串本町） | `/training?region=hamamatsu` または `?region=kushimoto` |
+| 3 | 避難訓練（浜松・串本町・大阪梅田） | `?region=hamamatsu` / `kushimoto` / `umeda` |
 | 4 | 振り返りで「自治体に提出」→ 行政ダッシュに蓄積 | 訓練完了後の提出ボタン |
 | 5 | 行政ダッシュボード（浜松） | `/admin/hamamatsu` |
 | 6 | 行政ダッシュボード（串本町） | `/admin/kushimoto` |
+| 6b | 行政ダッシュボード（大阪梅田） | `/admin/umeda` |
 | 7 | 地域振興券を配る（予算・1人あたり・優先順位） | ダッシュボード内モーダル |
 | 8 | ユーザー側・振興券フォルダ | `/vouchers` |
 

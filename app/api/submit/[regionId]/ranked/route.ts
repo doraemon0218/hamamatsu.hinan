@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserAggregates, getTopUserIdsByPriority } from "@/lib/admin-store";
 import type { RegionId, SortCriterion } from "@/lib/admin-store";
+import { REGION_IDS_FOR_HISTORY } from "@/lib/regions";
 
-const REGIONS: RegionId[] = ["hamamatsu", "kushimoto"];
+const REGIONS: RegionId[] = [...REGION_IDS_FOR_HISTORY];
 const SORT_CRITERIA: SortCriterion[] = [
   "age_desc",
   "age_asc",

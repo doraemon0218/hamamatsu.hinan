@@ -30,7 +30,13 @@ import {
 import { cn } from "@/lib/utils";
 import { addExp, loadUserSettings, getAgeFromBirthDate } from "@/lib/settings";
 import { getUserId } from "@/lib/user-id";
-import { getRegion, type SpotSource } from "@/lib/regions";
+import {
+  getRegion,
+  REGION_IDS_FOR_HISTORY,
+  inferRegionIdFromStart,
+  type RegionId,
+  type SpotSource,
+} from "@/lib/regions";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import type { EvacuationSpot } from "@/components/EvacuationMap";
 import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
@@ -96,15 +102,11 @@ function getDrillLogsKey(regionId: string): string {
   return `${DRILL_LOGS_KEY_PREFIX}${regionId}`;
 }
 
-/** スタート座標から地域を推定（regionId がない古いログ用）。串本町は北緯33°台、浜松は34°台 */
-function inferRegionIdFromStart(start: { lat: number; lng: number }): "hamamatsu" | "kushimoto" {
-  if (start.lat < 34) return "kushimoto";
-  return "hamamatsu";
-}
-
 /** ログの地域IDを決定（保存済みならそのまま、未設定ならスタート座標から推定） */
-function resolveRegionId(log: DrillLog): "hamamatsu" | "kushimoto" {
-  if (log.regionId === "kushimoto" || log.regionId === "hamamatsu") return log.regionId;
+function resolveRegionId(log: DrillLog): RegionId {
+  if (log.regionId === "kushimoto" || log.regionId === "hamamatsu" || log.regionId === "umeda") {
+    return log.regionId;
+  }
   return inferRegionIdFromStart(log.start);
 }
 
@@ -261,7 +263,7 @@ function migrateDrillLogsFromLegacy() {
 function repairDrillLogsByRegion() {
   if (typeof window === "undefined") return;
   try {
-    const regionIds = ["hamamatsu", "kushimoto"] as const;
+    const regionIds = REGION_IDS_FOR_HISTORY;
     const all: DrillLog[] = [];
     for (const rid of regionIds) {
       const raw = localStorage.getItem(getDrillLogsKey(rid));
@@ -270,7 +272,10 @@ function repairDrillLogsByRegion() {
         if (Array.isArray(arr)) all.push(...arr);
       }
     }
-    const byRegion: Record<string, DrillLog[]> = { hamamatsu: [], kushimoto: [] };
+    const byRegion = Object.fromEntries(regionIds.map((id) => [id, [] as DrillLog[]])) as Record<
+      RegionId,
+      DrillLog[]
+    >;
     for (const log of all) {
       const rid = resolveRegionId(log);
       byRegion[rid].push(log);
@@ -289,7 +294,7 @@ function loadDrillLogs(): DrillLog[] {
   migrateDrillLogsFromLegacy();
   repairDrillLogsByRegion();
   try {
-    const regionIds = ["hamamatsu", "kushimoto"] as const;
+    const regionIds = REGION_IDS_FOR_HISTORY;
     const all: DrillLog[] = [];
     for (const rid of regionIds) {
       const raw = localStorage.getItem(getDrillLogsKey(rid));
@@ -578,7 +583,9 @@ function TrainingContent() {
     const externalUrl =
       regionConfig.id === "kushimoto"
         ? (process.env.NEXT_PUBLIC_KUSHIMOTO_SUBMIT_URL ?? "")
-        : (process.env.NEXT_PUBLIC_HAMAMATSU_SUBMIT_URL ?? "");
+        : regionConfig.id === "umeda"
+          ? (process.env.NEXT_PUBLIC_UMEDA_SUBMIT_URL ?? "")
+          : (process.env.NEXT_PUBLIC_HAMAMATSU_SUBMIT_URL ?? "");
     try {
       const res = await fetch(apiUrl, {
         method: "POST",

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ChevronLeft, Gift, Filter, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RegionId } from "@/lib/regions";
-import { REGIONS } from "@/lib/regions";
+import { REGIONS, REGION_IDS_FOR_HISTORY } from "@/lib/regions";
 import type { SortCriterion } from "@/lib/admin-store";
 
 type SubmittedLog = {
@@ -32,7 +32,7 @@ type SubmittedLog = {
   submittedAt: string;
 };
 
-const REGION_IDS: RegionId[] = ["hamamatsu", "kushimoto"];
+const REGION_IDS: RegionId[] = [...REGION_IDS_FOR_HISTORY];
 
 const SORT_OPTIONS: { value: SortCriterion; label: string }[] = [
   { value: "age_desc", label: "年齢（高齢者優先）" },
