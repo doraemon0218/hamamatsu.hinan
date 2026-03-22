@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
+    "dev:demo": "CHOKIDAR_USEPOLLING=true WATCHPACK_POLLING=true next dev -p 3002 -H 127.0.0.1",
+    "dev:demo:alt": "CHOKIDAR_USEPOLLING=true WATCHPACK_POLLING=true next dev -p 3004 -H 127.0.0.1",
+    "dev:demo:3005": "CHOKIDAR_USEPOLLING=true WATCHPACK_POLLING=true next dev -p 3005 -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
