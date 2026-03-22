@@ -245,7 +245,7 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>一時避難訓練のスタート地点（3か所）</CardTitle>
+            <CardTitle>一次避難訓練のスタート地点（3か所）</CardTitle>
             <CardDescription>
               自宅・職場・最愛の家族の居場所。変更後は「設定を保存」を押してください。
             </CardDescription>

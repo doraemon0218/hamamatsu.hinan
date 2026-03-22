@@ -53,9 +53,7 @@ export default function Home() {
         <div className="container mx-auto flex items-center justify-between gap-2 px-4 py-3">
           <div className="flex items-center gap-2">
             <Waves className="size-6 text-primary" aria-hidden />
-            <h1 className="text-lg font-semibold text-foreground">
-              いっとき避難トレーニング
-            </h1>
+            <h1 className="text-lg font-semibold text-foreground">ココイケ</h1>
           </div>
           <Link
             href="/settings"
@@ -97,7 +95,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* 地域振興券フォルダ（QRコード決済で利用可能） */}
+        {/* 獲得した地域振興券を使う（QRコード決済で利用可能） */}
         <section>
           <Link href="/vouchers" className="block">
             <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-card to-primary/5 transition-shadow hover:shadow-md">
@@ -106,7 +104,7 @@ export default function Home() {
                   <Gift className="size-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-foreground">地域振興券</p>
+                  <p className="font-semibold text-foreground">獲得した地域振興券を使う</p>
                   <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <QrCode className="size-3.5" aria-hidden />
                     QRコード決済で利用できます
@@ -126,15 +124,20 @@ export default function Home() {
         <section>
           <Card className="overflow-hidden border-2 border-accent/40 bg-card shadow-md">
             <CardHeader className="pb-2">
-              <CardDescription>南海トラフ地震・津波に備えて</CardDescription>
-              <CardTitle className="text-xl leading-tight text-foreground sm:text-2xl">
-                いつか必ず来る。だから今から、
-                <span className="mt-1 block text-accent">「一時避難」を身につける</span>
+              <CardDescription className="text-foreground/80">
+                南海トラフ地震・巨大津波。来ないことを願うだけでは、足りないときがあります。
+              </CardDescription>
+              <CardTitle className="text-xl leading-snug text-foreground sm:text-2xl">
+                あなたができる最善の
+                <span className="mt-1 block text-accent">一次避難を、設計しましょう。</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                歩く・走る・自転車のそれぞれの状態で避難訓練ができます。あなたの情報やスタート地点の登録は設定から行えます。
+            <CardContent className="space-y-3">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                ここから始めるのは、あなた自身です。歩く・走る・自転車——いまのからだのままで、避難のイメージを少しずつ具体化できます。
+              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                遅れたと責めるのではなく、一歩ずつを応援するために。スタート地点やあなたの情報は設定から整えられ、迷ったときもこの画面に戻ってこれます。
               </p>
             </CardContent>
           </Card>

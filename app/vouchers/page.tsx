@@ -55,7 +55,7 @@ export default function VouchersPage() {
             <ChevronLeft className="size-5" />
           </Link>
           <Gift className="size-6 text-primary" aria-hidden />
-          <h1 className="text-lg font-semibold text-foreground">地域振興券</h1>
+          <h1 className="text-lg font-semibold text-foreground">獲得した地域振興券を使う</h1>
         </div>
       </header>
 
@@ -81,7 +81,7 @@ export default function VouchersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>受け取った地域振興券</CardTitle>
+            <CardTitle>獲得した地域振興券一覧</CardTitle>
             <CardDescription>
               自治体から配布された地域振興券です。加盟店でQRコード決済に利用できます。
             </CardDescription>
