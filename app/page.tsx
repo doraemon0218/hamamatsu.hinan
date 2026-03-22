@@ -1,18 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
-import { Waves, Bike, PersonStanding, Activity, Settings, History, Gift, QrCode } from "lucide-react";
+import {
+  Waves,
+  Bike,
+  PersonStanding,
+  Activity,
+  Settings,
+  History,
+  Gift,
+  QrCode,
+  AlertTriangle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   loadUserSettings,
   getLevel,
   getExpInCurrentLevel,
   XP_PER_LEVEL,
+  getAgeFromBirthDate,
 } from "@/lib/settings";
 import { getUserId } from "@/lib/user-id";
+import {
+  getMobilityDisplays,
+  MOBILITY_STALE_DAYS,
+  type MobilityDisplay,
+} from "@/lib/mobility-profile";
 
 const MOBILITY_MODES = [
   { id: "walk", label: "歩く", icon: PersonStanding, desc: "無理のない歩行で避難" },
@@ -20,14 +36,46 @@ const MOBILITY_MODES = [
   { id: "bicycle", label: "自転車に乗る", icon: Bike, desc: "自転車で速やかに避難" },
 ] as const;
 
+function formatLastTrain(iso: string | null) {
+  if (!iso) return "最終更新: まだ訓練記録なし";
+  return `最終更新: ${new Date(iso).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}`;
+}
+
 export default function Home() {
   const [exp, setExp] = useState(0);
   const [voucherTotal, setVoucherTotal] = useState<number | null>(null);
+  const [mobilityRows, setMobilityRows] = useState<MobilityDisplay[]>(() => {
+    if (typeof window === "undefined") return [];
+    const age = getAgeFromBirthDate(loadUserSettings().birthDate ?? "");
+    return getMobilityDisplays(age);
+  });
+  const refreshMobility = useCallback(() => {
+    const s = loadUserSettings();
+    const age = getAgeFromBirthDate(s.birthDate ?? "");
+    setMobilityRows(getMobilityDisplays(age));
+  }, []);
 
   useEffect(() => {
     const s = loadUserSettings();
     setExp(s.exp ?? 0);
   }, []);
+
+  useEffect(() => {
+    refreshMobility();
+    const onVis = () => {
+      if (document.visibilityState === "visible") refreshMobility();
+    };
+    window.addEventListener("focus", refreshMobility);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", refreshMobility);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [refreshMobility]);
 
   useEffect(() => {
     const userId = getUserId();
@@ -148,29 +196,56 @@ export default function Home() {
             <CardHeader>
               <CardTitle>避難訓練の移動手段</CardTitle>
               <CardDescription>
-                次の3つの状態それぞれで避難訓練ができます。どれからでも選べます
+                3つの移動手段それぞれで訓練できます。訓練を終えるたびに、最終更新日が記録されます。
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="grid gap-3 sm:grid-cols-3">
                 {MOBILITY_MODES.map((mode) => {
                   const Icon = mode.icon;
+                  const row = mobilityRows.find((r) => r.id === mode.id);
                   return (
                     <li key={mode.id}>
                       <div
                         className={cn(
-                          "flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-4 text-center"
+                          "flex h-full flex-col gap-2 rounded-lg border bg-card px-3 py-3 text-left sm:px-4 sm:py-4",
+                          row?.isStale
+                            ? "border-amber-500/50 ring-1 ring-amber-500/25"
+                            : "border-border"
                         )}
                       >
-                        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                          <Icon className="size-6" />
+                        <div className="flex items-start gap-2">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:size-12">
+                            <Icon className="size-5 sm:size-6" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-foreground">{mode.label}</span>
+                            <p className="mt-1 text-xs leading-snug text-muted-foreground">{mode.desc}</p>
+                          </div>
                         </div>
-                        <span className="font-medium text-foreground">
-                          {mode.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {mode.desc}
-                        </span>
+                        {row && (
+                          <>
+                            <p className="text-xs text-muted-foreground">{formatLastTrain(row.lastTrainedAtIso)}</p>
+                            {row.isStale && (
+                              <p className="flex items-start gap-1 rounded-md bg-amber-500/15 px-2 py-1.5 text-[11px] font-medium text-amber-950 dark:text-amber-100">
+                                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                                <span>
+                                  {!row.lastTrainedAtIso
+                                    ? "この手段での訓練がまだありません。"
+                                    : `約${MOBILITY_STALE_DAYS}日以上訓練していません${
+                                        row.daysSinceTrain != null ? `（最終から${row.daysSinceTrain}日経過）` : ""
+                                      }。`}
+                                </span>
+                              </p>
+                            )}
+                            <Link
+                              href={`/training?region=hamamatsu&mobility=${mode.id}`}
+                              className="mt-1 text-center text-xs font-medium text-primary underline-offset-2 hover:underline"
+                            >
+                              この手段で訓練へ
+                            </Link>
+                          </>
+                        )}
                       </div>
                     </li>
                   );

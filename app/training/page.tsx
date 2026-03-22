@@ -34,6 +34,7 @@ import { getRegion, type SpotSource } from "@/lib/regions";
 import { loadLikedLogIds, saveLikedLogIds } from "@/lib/liked-logs";
 import type { EvacuationSpot } from "@/components/EvacuationMap";
 import { fetchWalkingRouteVia, type LatLng } from "@/lib/route-api";
+import { recordMobilityTraining } from "@/lib/mobility-profile";
 
 type DrillPhase = "idle" | "running" | "paused" | "ended";
 
@@ -421,6 +422,11 @@ function TrainingContent() {
     setLikedLogIds(loadLikedLogIds());
   }, []);
 
+  useEffect(() => {
+    const m = searchParams.get("mobility");
+    if (m === "walk" || m === "run" || m === "bicycle") setMobility(m);
+  }, [searchParams]);
+
   const topFive = useMemo(
     () => getEvacuationSpots(regionConfig.spots, timeLimit, mobility),
     [regionConfig.spots, timeLimit, mobility]
@@ -537,6 +543,7 @@ function TrainingContent() {
       const log: DrillLog = { ...rawLog, credibility };
       saveDrillLog(log);
       addExp(10); // 訓練完了で経験値+10
+      recordMobilityTraining(mobility);
       reflectionLogRef.current = log;
     }
     setShowEndConfirm(false);
